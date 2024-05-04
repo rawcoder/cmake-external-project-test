@@ -45,10 +45,10 @@ if(APPLE)
   set(LIB_DEPS ${IOKIT} ${COREFOUNDATION})
 elseif(UNIX)
   # specific for Linux
-  message(STATUS "Detected Unix.  Will link with libudev" )
+  message(STATUS "Detected Unix.  Will link with libudev")
   set(LIB_DEPS "-ludev")
 else()
-  message( FATAL_ERROR "You can not do this at all, CMake will exit." )
+  message(FATAL_ERROR "Unsupported platform.  Exiting...")
 endif()
 
 include_directories(${HIDAPI_INCLUDE_DIR})
