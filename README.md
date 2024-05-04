@@ -1,5 +1,14 @@
 Minimal test of using cmake to manage external projects (hidapi).
 
-To build, run ```./b``` from the repository root.
+Tested on Linux.  Should work on Mac as well.
 
-(Note, I've only tested this on Mac.)
+## Building
+
+```sh
+mkdir build
+cd build
+cmake -G Ninja ..
+ninja
+```
+
+

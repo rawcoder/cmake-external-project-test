@@ -8,6 +8,7 @@ set(CMAKE_CXX_STANDARD 11)
 set(HIDAPI_ROOT ${CMAKE_BINARY_DIR}/thirdparty/hidapi)
 set(HIDAPI_LIB_DIR ${HIDAPI_ROOT}/bin/lib)
 set(HIDAPI_INCLUDE_DIR ${HIDAPI_ROOT}/bin/include)
+set(HIDAPI_STATIC_LIB_FILE ${HIDAPI_LIB_DIR}/libhidapi-hidraw.a)
 
 include(ExternalProject)
 
@@ -22,7 +23,7 @@ ExternalProject_Add(hidapi_external
                     INSTALL_DIR ${HIDAPI_ROOT}/bin
                     CONFIGURE_COMMAND ./configure --prefix=<INSTALL_DIR>
                     BUILD_COMMAND make
-                    BUILD_BYPRODUCTS ${HIDAPI_LIB_DIR}/libhidapi.a)
+                    BUILD_BYPRODUCTS ${HIDAPI_STATIC_LIB_FILE})
 
 # hidapi requires an initial execution of "./bootstrap" to run autoreconf
 ExternalProject_Add_Step(hidapi_external
@@ -33,15 +34,23 @@ ExternalProject_Add_Step(hidapi_external
                          WORKING_DIRECTORY ${HIDAPI_ROOT}/src/hidapi)
 
 add_library(libhidapi STATIC IMPORTED)
-set_target_properties(libhidapi PROPERTIES IMPORTED_LOCATION ${HIDAPI_LIB_DIR}/libhidapi.a)
+set_target_properties(libhidapi PROPERTIES IMPORTED_LOCATION ${HIDAPI_STATIC_LIB_FILE})
 add_dependencies(libhidapi hidapi_external)
 
 ################ test app
 
-find_library(IOKIT NAMES IOKit)
-find_library(COREFOUNDATION NAMES CoreFoundation)
+if(APPLE)
+  find_library(IOKIT NAMES IOKit)
+  find_library(COREFOUNDATION NAMES CoreFoundation)
+  set(LIB_DEPS ${IOKIT} ${COREFOUNDATION})
+elseif(UNIX)
+  # specific for Linux
+  message(STATUS "Detected Unix.  Will link with libudev" )
+  set(LIB_DEPS "-ludev")
+else()
+  message( FATAL_ERROR "You can not do this at all, CMake will exit." )
+endif()
 
 include_directories(${HIDAPI_INCLUDE_DIR})
 add_executable(hidapi-test src/main.cpp)
-target_link_libraries(hidapi-test ${IOKIT} ${COREFOUNDATION} libhidapi)
-
+target_link_libraries(hidapi-test ${LIB_DEPS} libhidapi)
